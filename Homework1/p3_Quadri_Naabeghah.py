@@ -9,5 +9,16 @@ def find_dup_str(s, n):
 
 s = input("Enter a string: ")
 n = int(input("Enter substring length: "))
-
 print(find_dup_str(s, n))
+
+
+def find_max_dup(s):
+    for n in range(len(s), 0, -1):
+        substring = find_dup_str(s, n)
+
+        if substring != "":
+            return substring
+    return ""
+
+s = input("Enter a string: ")
+print(find_max_dup(s))
