@@ -37,3 +37,11 @@ while True:
         a * x ** 2 + b * x + c
         for x in xs
     ]
+    
+    plt.figure()
+    plt.plot(xs, ys)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Quadratic Function")
+    plt.grid()
+    plt.show()
