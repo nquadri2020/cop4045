@@ -1,0 +1,108 @@
+1.import ast
+2.import io
+3.import tokenize
+4.
+5.def line_number(input_filename: str, output_filename: str) -> None:
+6.    """Write a numbered copy of a text file to another file.
+7.    Args:
+8.        input_filename: Name of the input text file.
+9.        output_filename: Name of the output text file.
+10.    Raises:
+11.        OSError: If the input or output file cannot be accessed.
+12.    """
+13.    try:
+14.        with open(input_filename, "r", encoding="utf-8") as input_file:
+15.            lines = input_file.readlines()
+16.        with open(output_filename, "w", encoding="utf-8") as output_file:
+17.            for number, line in enumerate(lines, start=1):
+18.                output_file.write("{}.".format(number) + line)
+19.    except OSError as error:
+20.        print("Error processing files: {}".format(error))
+21.        raise
+22.
+23.def remove_comments_and_empty_lines(source: str) -> str:
+24.    """Remove comments and empty lines from Python source code.
+25.    Args:
+26.        source: Python source code.
+27.    Returns:
+28.        Source code with comments and empty lines removed.
+29.    """
+30.    result = []
+31.    tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+32.
+33.    for token in tokens:
+34.        if token.type == tokenize.COMMENT:
+35.            continue
+36.        result.append(token)
+37.
+38.    cleaned = tokenize.untokenize(result)
+39.
+40.    lines = [
+41.        line for line in cleaned.splitlines()
+42.        if line.strip()
+43.    ]
+44.    return "\n".join(lines) + "\n"
+45.
+46.def parse_functions(filename: str) -> tuple:
+47.    """Parse a Python file and return information about its functions.
+48.    Args:
+49.        filename: Name of the Python source file.
+50.    Returns:
+51.        A tuple of tuples containing the line number, function name,
+52.        formal arguments, and source code for each function.
+53.    Raises:
+54.        OSError: If the file cannot be read.
+55.        SyntaxError: If the Python source cannot be parsed.
+56.    """
+57.    try:
+58.        with open(filename, "r", encoding="utf-8") as input_file:
+59.            source = input_file.read()
+60.        tree = ast.parse(source)
+61.        lines = source.splitlines(keepends=True)
+62.
+63.        functions = []
+64.        for node in tree.body:
+65.            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+66.                function_source = "".join(
+67.                    lines[node.lineno - 1:node.end_lineno]
+68.                )
+69.                function_source = remove_comments_and_empty_lines(
+70.                    function_source
+71.                )
+72.
+73.                arguments = []
+74.                for argument in node.args.posonlyargs:
+75.                    arguments.append(argument.arg)
+76.                for argument in node.args.args:
+77.                    arguments.append(argument.arg)
+78.                if node.args.vararg is not None:
+79.                    arguments.append("*" + node.args.vararg.arg)
+80.                for argument in node.args.kwonlyargs:
+81.                    arguments.append(argument.arg)
+82.                if node.args.kwarg is not None:
+83.                    arguments.append("**" + node.args.kwarg.arg)
+84.                argument_string = ", ".join(arguments)
+85.
+86.                functions.append(
+87.                    (
+88.                        node.lineno,
+89.                        node.name,
+90.                        argument_string,
+91.                        function_source,
+92.                    )
+93.                )
+94.        functions.sort(key=lambda function: function[1])
+95.        return tuple(functions)
+96.    except (OSError, SyntaxError) as error:
+97.        print("Error parsing Python file: {}".format(error))
+98.        raise
+99.
+100.def main() -> None:
+101.    source_filename = "p1_Quadri_Naabeghah.py"
+102.    numbered_filename = "p1_Quadri_Naabeghah.py.txt"
+103.    line_number(source_filename, numbered_filename)
+104.    functions = parse_functions(source_filename)
+105.    print(functions)
+106.
+107.if __name__ == "__main__":
+108.    main()
